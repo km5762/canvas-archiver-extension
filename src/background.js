@@ -15,12 +15,17 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener(async (message) => {
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
-    await main()
-    // const url = new URL((await getCurrentTab()).url);
-    // console.log(url);
-    // console.log(tab);
-    // console.log(message);
-    // downloadFile('https://canvas.wpi.edu/api/v1/files/6230398');
+    const url = new URL((await getCurrentTab()).url);
+    const path = url.pathname.split('/');
+    const courseId = path[path.indexOf('courses') + 1];
+
+    const modules = await getModules(url.origin, courseId);
+    const files = await getFilesFiles(url.origin);
+    const items = await getItems(modules);
+
+    console.log(modules);
+    console.log(files);
+    console.log(items);
   }
 });
 
@@ -40,52 +45,46 @@ async function getCurrentTab() {
   return tab;
 }
 
-async function main() {
-  let thing = (await getCurrentTab())
-  console.log(thing)
-  console.log(thing.url)
-  const url = new URL((await getCurrentTab()).url);
-  if (url.pathname.includes("courses")) {
-    let courseId = url.pathname.split[1]
-    let courseFiles = await getFilesFromCourseId()
-  }
-  //else {
-  // let all_courseFiles = for each course on dashboard...
-  // this url will be the basename or have /?login_success=1 on the end
-  //}
-}
-
-async function getFilesFromCourseId() {
-  let filesFiles = getFilesFiles()
-  // let moduleFiles = getModuleFiles(courseId)
-  console.log(filesFiles)
-  //call discussion
-  //call announcements
-  // call assignments
-}
-
-async function getFilesFiles() {
-  const hostname = new URL((await getCurrentTab()).url).origin;
-  const filesUrl = hostname + "/api/v1/files"
-  let files = await fetch(filesUrl)
-  let fileObjectList = []
+async function getFilesFiles(urlOrigin) {
+  const filesUrl = urlOrigin + "/api/v1/files";
+  let files = await fetch(filesUrl);
+  let fileObjectList = [];
   files.forEach(element => {
-    fileObjectList.push(fileObjectHandler(element))
+    fileObjectList.push(fileObjectHandler(element));
   });
-  return fileObjectList
+  return fileObjectList;
 }
 
 function fileObjectHandler(fileObject) {
   // return [{"fileName": /module/announcement/<filename>, "fileurl": <url>},...]
-  let fileName = "files/" + fileObject.filename
-  let fileUrl = fileObject.url
-  return { fileName, fileUrl }
+  let fileName = "files/" + fileObject.filename;
+  let fileUrl = fileObject.url;
+  return { fileName, fileUrl };
 }
 async function getModuleFiles(courseId) {
   // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
 
 }
 
+async function getModules(origin, courseId) {
+  const response = await fetch(
+    origin + '/api/v1/courses/' + courseId + '/modules'
+  );
+
+  return await response.json();
+}
+
+function getItems(module) {
+  return fetch(module['items_url']);
+}
+
+function getFile(item) {
+  return fetch(item['url']);
+}
+
+function getDownloadUrl(file) {
+  return fetch(file['url']);
+}
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
