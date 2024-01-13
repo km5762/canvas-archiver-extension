@@ -51,16 +51,20 @@ async function getModules(origin, courseId) {
   return await response.json();
 }
 
-function getItems(module) {
-  return fetch(module['items_url']);
+async function getItems(modules) {
+  const responses = await Promise.all(
+    modules.map((module) => fetch(module['items_url']))
+  );
+
+  return await Promise.all(responses.map((response) => response.json()));
 }
 
-function getFile(item) {
-  return fetch(item['url']);
-}
-
-function getDownloadUrl(file) {
-  return fetch(file['url']);
+async function getFiles(items) {
+  for (const item of items) {
+    const fileItems = item.filter((item) => item.type === 'File');
+    for (const file of fileItems) {
+    }
+  }
 }
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
