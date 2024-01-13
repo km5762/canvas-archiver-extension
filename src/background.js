@@ -19,8 +19,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const path = url.pathname.split('/');
     const courseId = path[path.indexOf('courses') + 1];
 
+    const files = await getFilesFiles(url.origin, courseId);
     const modules = await getModules(url.origin, courseId);
-    const files = await getFilesFiles(url.origin);
     const items = await getItems(modules);
 
     console.log(modules);
@@ -45,9 +45,10 @@ async function getCurrentTab() {
   return tab;
 }
 
-async function getFilesFiles(urlOrigin) {
-  const filesUrl = urlOrigin + "/api/v1/files";
-  let files = await fetch(filesUrl);
+async function getFilesFiles(urlOrigin, courseId) {
+  const filesUrl = urlOrigin + `/api/v1/courses/${courseId}/files`;
+  let filesResponse = await fetch(filesUrl)
+  let files = await filesResponse.json();
   let fileObjectList = [];
   files.forEach(element => {
     fileObjectList.push(fileObjectHandler(element));
@@ -61,10 +62,10 @@ function fileObjectHandler(fileObject) {
   let fileUrl = fileObject.url;
   return { fileName, fileUrl };
 }
-async function getModuleFiles(courseId) {
-  // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
+// async function getModuleFiles(courseId) {
+// return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
 
-}
+// }
 
 async function getModules(origin, courseId) {
   const response = await fetch(
