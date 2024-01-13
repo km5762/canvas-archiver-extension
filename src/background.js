@@ -20,12 +20,11 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const courseId = path[path.indexOf('courses') + 1];
 
     const modules = await getModules(url.origin, courseId);
-    const files = await getFilesFiles(url.origin);
+    // const files = await getFilesFiles(url.origin);
     const items = await getItems(modules);
-
-    console.log(modules);
-    console.log(files);
     console.log(items);
+    const files = await getFiles(items);
+    console.log(files);
   }
 });
 
@@ -46,10 +45,10 @@ async function getCurrentTab() {
 }
 
 async function getFilesFiles(urlOrigin) {
-  const filesUrl = urlOrigin + "/api/v1/files";
+  const filesUrl = urlOrigin + '/api/v1/files';
   let files = await fetch(filesUrl);
   let fileObjectList = [];
-  files.forEach(element => {
+  files.forEach((element) => {
     fileObjectList.push(fileObjectHandler(element));
   });
   return fileObjectList;
@@ -57,13 +56,12 @@ async function getFilesFiles(urlOrigin) {
 
 function fileObjectHandler(fileObject) {
   // return [{"fileName": /module/announcement/<filename>, "fileurl": <url>},...]
-  let fileName = "files/" + fileObject.filename;
+  let fileName = 'files/' + fileObject.filename;
   let fileUrl = fileObject.url;
   return { fileName, fileUrl };
 }
 async function getModuleFiles(courseId) {
   // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
-
 }
 
 async function getModules(origin, courseId) {
@@ -81,13 +79,22 @@ async function getItems(modules) {
 
   return await Promise.all(responses.map((response) => response.json()));
 }
-
 async function getFiles(items) {
+  const files = [];
   for (const item of items) {
     const fileItems = item.filter((item) => item.type === 'File');
-    for (const file of fileItems) {
-    }
+    const responses = await Promise.all(
+      fileItems.map((fileItem) => fetch(fileItem['url']))
+    );
+
+    const fileData = await Promise.all(
+      responses.map(async (response) => await response.json())
+    );
+
+    files.push(fileData);
   }
+
+  return files;
 }
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
