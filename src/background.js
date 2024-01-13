@@ -13,10 +13,13 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener(async (message) => {
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
+    const url = new URL((await getCurrentTab()).url);
+    console.log(url);
+    console.log(tab);
     console.log(message);
-    downloadFile('https://canvas.wpi.edu/api/v1/files/6230398');
+    // downloadFile('https://canvas.wpi.edu/api/v1/files/6230398');
   }
 });
 
@@ -28,6 +31,12 @@ async function downloadFile(url) {
     url: responseJson.url,
     filename: responseJson.filename, //Optional
   });
+}
+
+async function getCurrentTab() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
 }
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
