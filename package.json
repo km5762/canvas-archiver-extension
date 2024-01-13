@@ -1,5 +1,14 @@
 {
   "dependencies": {
+<<<<<<< HEAD
     "node-html-parser": "^6.1.12"
+=======
+    "jszip": "^3.10.1",
+    "node-html-parser": "^6.1.12"
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+>>>>>>> 0c62b3133a5132eb1a96ed81152b8bcb9f947273
   }
 }

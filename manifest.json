@@ -3,12 +3,23 @@
   "name": "Canvas Archiver",
   "description": "Base Level Extension",
   "version": "1.0",
+<<<<<<< HEAD
   "permissions": ["downloads", "declarativeContent", "tabs", "activeTab"],
+=======
+  "permissions": ["downloads", "activeTab"],
+>>>>>>> 0c62b3133a5132eb1a96ed81152b8bcb9f947273
   "action": {
     "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "service-worker.js"
   },
-  "host_permissions": ["http://*/*", "https://*/*"]
+  "host_permissions": ["https://canvas.wpi.edu/*"],
+  "content_scripts":[
+    {
+      "matches": ["*://*/courses/*"],
+      "js": ["course/course.js"],
+      "css": ["popup.css"]
+    }
+  ]
 }
