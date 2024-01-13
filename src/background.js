@@ -1,19 +1,25 @@
 chrome.runtime.onInstalled.addListener(() => {
+  chrome.action.disable();
+
   chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-    chrome.declarativeContent.onPageChanged.addRules([
-      {
-        conditions: [
-          new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: { hostEquals: 'canvas.wpi.edu', pathPrefix: '/courses/' },
-          }),
-        ],
-        actions: [new chrome.declarativeContent.ShowAction()],
-      },
-    ]);
+    let exampleRule = {
+      conditions: [
+        new chrome.declarativeContent.PageStateMatcher({
+          pageUrl: {
+            hostEquals: 'canvas.wpi.edu',
+          },
+        }),
+      ],
+      actions: [new chrome.declarativeContent.ShowAction()],
+    };
+
+    let rules = [exampleRule];
+    chrome.declarativeContent.onPageChanged.addRules(rules);
   });
 });
 
 chrome.runtime.onMessage.addListener(async (message) => {
+  console.log(message);
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
