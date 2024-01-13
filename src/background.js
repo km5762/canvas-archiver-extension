@@ -20,11 +20,25 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const courseId = path[path.indexOf('courses') + 1];
 
     const modules = await getModules(url.origin, courseId);
+    console.log(modules);
     // const files = await getFilesFiles(url.origin);
     const items = await getItems(modules);
     console.log(items);
     const files = await getFiles(items);
     console.log(files);
+
+    archive = [];
+    modules.forEach((module, i) => {
+      const moduleFiles = files[i];
+      for (const file of moduleFiles) {
+        archive.push({
+          path: 'modules/' + module.name + '/' + file.filename,
+          url: file.url,
+        });
+      }
+    });
+
+    console.log(archive);
   }
 });
 
