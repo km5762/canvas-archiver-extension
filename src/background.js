@@ -22,10 +22,9 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const files = await getFilesFiles(url.origin, courseId);
     const modules = await getModules(url.origin, courseId);
     const items = await getItems(modules);
-
+    console.log(items);
     console.log(modules);
     console.log(files);
-    console.log(items);
   }
 });
 
@@ -50,7 +49,7 @@ async function getFilesFiles(urlOrigin, courseId) {
   let filesResponse = await fetch(filesUrl)
   let files = await filesResponse.json();
   let fileObjectList = [];
-  files.forEach(element => {
+  files.forEach((element) => {
     fileObjectList.push(fileObjectHandler(element));
   });
   return fileObjectList;
@@ -58,14 +57,13 @@ async function getFilesFiles(urlOrigin, courseId) {
 
 function fileObjectHandler(fileObject) {
   // return [{"fileName": /module/announcement/<filename>, "fileurl": <url>},...]
-  let fileName = "files/" + fileObject.filename;
+  let fileName = 'files/' + fileObject.filename;
   let fileUrl = fileObject.url;
   return { fileName, fileUrl };
 }
-// async function getModuleFiles(courseId) {
-// return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
-
-// }
+async function getModuleFiles(courseId) {
+  // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
+}
 
 async function getModules(origin, courseId) {
   const response = await fetch(
@@ -75,16 +73,29 @@ async function getModules(origin, courseId) {
   return await response.json();
 }
 
-function getItems(module) {
-  return fetch(module['items_url']);
-}
+async function getItems(modules) {
+  const responses = await Promise.all(
+    modules.map((module) => fetch(module['items_url']))
+  );
 
-function getFile(item) {
-  return fetch(item['url']);
+  return await Promise.all(responses.map((response) => response.json()));
 }
+async function getFiles(items) {
+  const files = [];
+  for (const item of items) {
+    const fileItems = item.filter((item) => item.type === 'File');
+    const responses = await Promise.all(
+      fileItems.map((fileItem) => fetch(fileItem['url']))
+    );
 
-function getDownloadUrl(file) {
-  return fetch(file['url']);
+    const fileData = await Promise.all(
+      responses.map(async (response) => await response.json())
+    );
+
+    files.push(fileData);
+  }
+
+  return files;
 }
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
