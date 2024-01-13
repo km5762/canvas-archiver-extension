@@ -12,5 +12,5 @@
     "default_icon": "icons/icon.png"
   },
   "host_permissions": ["https://canvas.wpi.edu/*"],
-  "permissions": ["downloads", "declarativeContent", "tabs", "activeTab"]
+  "permissions": ["downloads", "declarativeContent", "tabs", "activeTab", "offscreen"]
 }
