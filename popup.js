@@ -1,5 +1,9 @@
 document
-  .getElementById("download-button")
-  .addEventListener("click", function () {
-    chrome.runtime.sendMessage({ action: "downloadButtonClicked" });
+  .getElementById("download-input")
+  .addEventListener("change", (event) => {
+    event.preventDefault();
+    chrome.runtime.sendMessage({
+      action: "downloadPathSelected",
+      path: event.target.files[0].path,
+    });
   });

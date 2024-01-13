@@ -1,0 +1,16 @@
+body {
+  background-color: #212121;
+  margin: 6px;
+}
+#download-button {
+  font-size: medium;
+  background-color: #4681f4;
+  color: #FAF9F6;
+  border-radius: 3px;
+  border: none;
+}
+#download-button:hover {
+  opacity: 90%;
+  border-radius: 3px;
+  border: none;
+}
