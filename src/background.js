@@ -20,45 +20,56 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener(async (message) => {
   console.log(message);
-  return;
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
     const courseId = path[path.indexOf('courses') + 1];
 
     let archive = [];
-    const files = await getFilesFiles(url.origin, courseId);
-    for (const file of files) {
-      archive.push(file);
+
+    if (message.options.files) {
+      await filesFromFiles(url.origin, courseId, archive);
     }
-    const modules = await getModules(url.origin, courseId);
-    const moduleItems = await getModuleItems(modules);
-    const moduleFiles = await getModuleFiles(moduleItems);
-    console.log(moduleItems);
-    console.log(modules);
-    console.log(files);
+    if (message.options.modules) {
+      await filesFromModules(url.origin, courseId, archive);
+    }
 
-    modules.forEach((module, i) => {
-      const mFiles = moduleFiles[i];
-      for (const file of mFiles) {
-        archive.push({
-          fileName: 'modules/' + module.name + '/' + file.filename,
-          fileUrl: file.url,
-        });
-      }
-    });
-
-    fetchAndDownload(archive, courseId);
+    await fetchAndDownload(archive, courseId);
     console.log(archive);
   }
 });
 
-async function fetchAndDownload(objects, courseId) {
-  objects.forEach((file) => {
+async function filesFromFiles(origin, courseId, archive) {
+  const files = await getFilesFiles(origin, courseId);
+  for (const file of files) {
+    archive.push(file);
+  }
+}
+
+async function filesFromModules(origin, courseId, archive) {
+  const modules = await getModules(origin, courseId);
+  const moduleItems = await getModuleItems(modules);
+  const moduleFiles = await getModuleFiles(moduleItems);
+
+  modules.forEach((module, i) => {
+    const mFiles = moduleFiles[i];
+    for (const file of mFiles) {
+      archive.push({
+        fileName: 'modules/' + module.name + '/' + file.filename,
+        fileUrl: file.url,
+      });
+    }
+  });
+}
+
+async function fetchAndDownload(archive, courseId) {
+  console.log(archive);
+  console.log(courseId);
+  archive.forEach((file) => {
+    console.log(file);
     chrome.downloads.download({
       url: file.fileUrl,
       filename: `${courseId}/` + file.fileName,
-      saveAs: false,
     });
   });
 }
