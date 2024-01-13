@@ -1,0 +1,14 @@
+body {
+  background-color: #212121;
+  margin: 5px;
+  border-radius: 3px;
+}
+#download-input {
+  color: #9e9e9e;
+  border-radius: 3px;
+  font-family: sans-serif;
+  border: none;
+}
+#download-input:hover {
+  opacity: 90%;
+}
