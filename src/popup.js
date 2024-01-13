@@ -1,7 +1,13 @@
 document
   .getElementById('download-button')
   .addEventListener('click', function () {
-    chrome.runtime.sendMessage({ action: 'DOWNLOAD_BUTTON_CLICKED' });
+    const modules = document.getElementById('modules-checkbox').checked;
+    const files = document.getElementById('files-checkbox').checked;
+
+    chrome.runtime.sendMessage({
+      action: 'DOWNLOAD_BUTTON_CLICKED',
+      options: { modules, files },
+    });
   });
 
 //  if on course page

@@ -20,6 +20,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener(async (message) => {
   console.log(message);
+  return;
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
@@ -47,20 +48,19 @@ chrome.runtime.onMessage.addListener(async (message) => {
       }
     });
 
-
-    fetchAndDownload(archive, courseId)
+    fetchAndDownload(archive, courseId);
     console.log(archive);
   }
 });
 
 async function fetchAndDownload(objects, courseId) {
-  objects.forEach(file => {
+  objects.forEach((file) => {
     chrome.downloads.download({
       url: file.fileUrl,
       filename: `${courseId}/` + file.fileName,
-      saveAs: false
+      saveAs: false,
     });
-  })
+  });
 }
 
 async function getCurrentTab() {
@@ -118,7 +118,6 @@ async function getModuleFiles(items) {
 
   return files;
 }
-
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
