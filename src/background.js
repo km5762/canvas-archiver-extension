@@ -20,9 +20,11 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const courseId = path[path.indexOf('courses') + 1];
 
     const modules = await getModules(url.origin, courseId);
+    const files = await getFilesFiles(url.origin);
     const items = await getItems(modules);
 
     console.log(modules);
+    console.log(files);
     console.log(items);
   }
 });
@@ -41,6 +43,27 @@ async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
+}
+
+async function getFilesFiles(urlOrigin) {
+  const filesUrl = urlOrigin + "/api/v1/files";
+  let files = await fetch(filesUrl);
+  let fileObjectList = [];
+  files.forEach(element => {
+    fileObjectList.push(fileObjectHandler(element));
+  });
+  return fileObjectList;
+}
+
+function fileObjectHandler(fileObject) {
+  // return [{"fileName": /module/announcement/<filename>, "fileurl": <url>},...]
+  let fileName = "files/" + fileObject.filename;
+  let fileUrl = fileObject.url;
+  return { fileName, fileUrl };
+}
+async function getModuleFiles(courseId) {
+  // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
+
 }
 
 async function getModules(origin, courseId) {
@@ -66,6 +89,7 @@ async function getFiles(items) {
     }
   }
 }
+
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
 // Modules:
