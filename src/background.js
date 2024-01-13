@@ -19,12 +19,13 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const path = url.pathname.split('/');
     const courseId = path[path.indexOf('courses') + 1];
 
+    const files = await getFilesFiles(url.origin, courseId);
     const modules = await getModules(url.origin, courseId);
     console.log(modules);
     // const files = await getFilesFiles(url.origin);
     const items = await getItems(modules);
     console.log(items);
-    const files = await getFiles(items);
+    console.log(modules);
     console.log(files);
 
     archive = [];
@@ -58,9 +59,10 @@ async function getCurrentTab() {
   return tab;
 }
 
-async function getFilesFiles(urlOrigin) {
-  const filesUrl = urlOrigin + '/api/v1/files';
-  let files = await fetch(filesUrl);
+async function getFilesFiles(urlOrigin, courseId) {
+  const filesUrl = urlOrigin + `/api/v1/courses/${courseId}/files`;
+  let filesResponse = await fetch(filesUrl);
+  let files = await filesResponse.json();
   let fileObjectList = [];
   files.forEach((element) => {
     fileObjectList.push(fileObjectHandler(element));
