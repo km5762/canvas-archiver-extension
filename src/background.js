@@ -19,38 +19,42 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const path = url.pathname.split('/');
     const courseId = path[path.indexOf('courses') + 1];
 
+    let archive = [];
     const files = await getFilesFiles(url.origin, courseId);
+    for (const file of files) {
+      archive.push(file);
+    }
     const modules = await getModules(url.origin, courseId);
-    console.log(modules);
-    // const files = await getFilesFiles(url.origin);
-    const items = await getItems(modules);
-    console.log(items);
+    const moduleItems = await getModuleItems(modules);
+    const moduleFiles = await getModuleFiles(moduleItems);
+    console.log(moduleItems);
     console.log(modules);
     console.log(files);
 
-    archive = [];
     modules.forEach((module, i) => {
-      const moduleFiles = files[i];
-      for (const file of moduleFiles) {
+      const mFiles = moduleFiles[i];
+      for (const file of mFiles) {
         archive.push({
-          path: 'modules/' + module.name + '/' + file.filename,
-          url: file.url,
+          fileName: 'modules/' + module.name + '/' + file.filename,
+          fileUrl: file.url,
         });
       }
     });
 
+
+    fetchAndDownload(archive, courseId)
     console.log(archive);
   }
 });
 
-async function downloadFile(url) {
-  const response = await fetch(url);
-  const responseJson = await response.json();
-
-  chrome.downloads.download({
-    url: responseJson.url,
-    filename: responseJson.filename, //Optional
-  });
+async function fetchAndDownload(objects, courseId) {
+  objects.forEach(file => {
+    chrome.downloads.download({
+      url: file.fileUrl,
+      filename: `${courseId}/` + file.fileName,
+      saveAs: false
+    });
+  })
 }
 
 async function getCurrentTab() {
@@ -71,13 +75,9 @@ async function getFilesFiles(urlOrigin, courseId) {
 }
 
 function fileObjectHandler(fileObject) {
-  // return [{"fileName": /module/announcement/<filename>, "fileurl": <url>},...]
   let fileName = 'files/' + fileObject.filename;
   let fileUrl = fileObject.url;
   return { fileName, fileUrl };
-}
-async function getModuleFiles(courseId) {
-  // return [{"title": /module/announcement/<filename>, "fileurl": <url>},...]
 }
 
 async function getModules(origin, courseId) {
@@ -88,14 +88,14 @@ async function getModules(origin, courseId) {
   return await response.json();
 }
 
-async function getItems(modules) {
+async function getModuleItems(modules) {
   const responses = await Promise.all(
     modules.map((module) => fetch(module['items_url']))
   );
 
   return await Promise.all(responses.map((response) => response.json()));
 }
-async function getFiles(items) {
+async function getModuleFiles(items) {
   const files = [];
   for (const item of items) {
     const fileItems = item.filter((item) => item.type === 'File');
@@ -112,6 +112,7 @@ async function getFiles(items) {
 
   return files;
 }
+
 
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
