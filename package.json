@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "node-html-parser": "^6.1.12"
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
