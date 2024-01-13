@@ -1,0 +1,29 @@
+body {
+  background-color: #27272a;
+  color: #e80031;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px;
+  font-family: 'Lato Extended', 'Lato', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;
+}
+
+h1 {
+  font-size: 2rem;
+}
+#download-button {
+  border-radius: 16px;
+  padding: 4px 8px;
+  background-color: #e80031;
+  border: #b10127 solid 1px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#download-button:hover {
+  opacity: 90%;
+}
