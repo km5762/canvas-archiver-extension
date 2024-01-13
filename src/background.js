@@ -16,10 +16,14 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener(async (message) => {
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
-    console.log(url);
-    console.log(tab);
-    console.log(message);
-    // downloadFile('https://canvas.wpi.edu/api/v1/files/6230398');
+    const path = url.pathname.split('/');
+    const courseId = path[path.indexOf('courses') + 1];
+
+    const modules = await getModules(url.origin, courseId);
+    const items = await getItems(modules);
+
+    console.log(modules);
+    console.log(items);
   }
 });
 
@@ -39,6 +43,25 @@ async function getCurrentTab() {
   return tab;
 }
 
+async function getModules(origin, courseId) {
+  const response = await fetch(
+    origin + '/api/v1/courses/' + courseId + '/modules'
+  );
+
+  return await response.json();
+}
+
+function getItems(module) {
+  return fetch(module['items_url']);
+}
+
+function getFile(item) {
+  return fetch(item['url']);
+}
+
+function getDownloadUrl(file) {
+  return fetch(file['url']);
+}
 // if on https://<canvas>/courses/<course_id>/* (course specific download)
 // Download Modules, Files, (Assignments, Announcements, Discussions)
 // Modules:
