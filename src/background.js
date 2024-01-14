@@ -21,7 +21,6 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener(async (message) => {
-  // console.log(message);
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
@@ -37,8 +36,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
       dashboardJson.forEach((course) => {
         console.log(
-          `${url.origin}, ${course.id}, ${course.shortName.trim()}, ${
-            course.term
+          `${url.origin}, ${course.id}, ${course.shortName.trim()}, ${course.term
           }, ${message.options}`
         );
         getFilesFromCourseId(
@@ -51,7 +49,6 @@ chrome.runtime.onMessage.addListener(async (message) => {
       });
     } else {
       const archive = [];
-
       if (message.options.files) {
         await filesFromFiles(url.origin, courseId, archive);
       }
@@ -79,15 +76,23 @@ function slugify(title) {
 }
 
 async function filesFromPages(origin, courseId, archive) {
-  const pages = await getPages(origin, courseId);
+  let pages = await getPages(origin, courseId);
 
-  const bodies = await Promise.all(
+  if (!pages.ok) {
+    return;
+  }
+
+  pages = await pages.json();
+
+  let bodies = await Promise.all(
     pages.map((page) =>
       fetch(
         origin + '/api/v1/courses/' + courseId + '/pages/' + page['page_id']
       )
     )
   );
+
+  bodies = await Promise.all(bodies.map(body => body.json()))
 
   for (const body of bodies) {
     const doc = parse(body['body']);
@@ -126,9 +131,7 @@ async function filesFromPages(origin, courseId, archive) {
 }
 
 async function getPages(origin, courseId) {
-  return await (
-    await fetch(origin + '/api/v1/courses/' + courseId + '/pages?per_page=100')
-  ).json();
+  return await fetch(origin + '/api/v1/courses/' + courseId + '/pages?per_page=100')
 }
 
 async function filesFromAssignments(origin, courseId, archive) {
@@ -209,7 +212,7 @@ async function fetchAndDownload(archive, courseId) {
   archive.forEach((file) => {
     chrome.downloads.download({
       url: file.fileUrl,
-      filename: `${slugify(courseId)}/${slugify(file.filename)}`,
+      filename: `${courseId}/${file.fileName}`,
     });
   });
 }
@@ -232,7 +235,7 @@ async function getCurrentTab() {
 
 async function getFilesFromCourseId(origin, courseId, name, term, options) {
   let archive = [];
-
+  console.log(options);
   if (options.files) {
     await filesFromFiles(origin, courseId, archive);
   }
@@ -242,7 +245,8 @@ async function getFilesFromCourseId(origin, courseId, name, term, options) {
   if (options.assignments) {
     await filesFromAssignments(origin, courseId, archive);
   }
-  if (message.options.pages) {
+  if (options.pages) {
+    console.log("IN PAGES");
     await filesFromPages(origin, courseId, archive);
   }
   console.log(archive);
