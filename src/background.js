@@ -90,7 +90,7 @@ async function filesFromPages(origin, courseId, archive) {
   );
 
   for (const body of bodies) {
-    const doc = parse(body.description);
+    const doc = parse(body['body']);
 
     const anchorElements = doc.querySelectorAll('a');
 
@@ -101,7 +101,7 @@ async function filesFromPages(origin, courseId, archive) {
         anchorElement.getAttribute('data-api-returntype') === 'File'
       ) {
         files.push({
-          pageName: page.title,
+          pageName: body.title,
           fileUrl: anchorElement.getAttribute('data-api-endpoint'),
         });
       }
