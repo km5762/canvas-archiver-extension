@@ -1,3 +1,5 @@
+import { parse } from 'node-html-parser';
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.action.disable();
 
@@ -28,7 +30,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
     if (coursesIdx === -1 && !courseId) {
       // treat it as dashboard
-      const dashboard = url.origin + "/api/v1/dashboard/dashboard_cards?per_page=100";
+      const dashboard =
+        url.origin + '/api/v1/dashboard/dashboard_cards?per_page=100';
       const dashboardResponse = await fetch(dashboard);
       const dashboardJson = await dashboardResponse.json();
 
@@ -36,10 +39,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
         console.log(`${url.origin}, ${course.id}, ${course.shortName.trim()}, ${course.term}, ${message.options}`)
         getFilesFromCourseId(url.origin, course.id, course.shortName.trim(), course.term, message.options);
       });
-
-
     } else {
-      let archive = [];
+      const archive = [];
 
       if (message.options.files) {
         await filesFromFiles(url.origin, courseId, archive);
@@ -47,11 +48,12 @@ chrome.runtime.onMessage.addListener(async (message) => {
       if (message.options.modules) {
         await filesFromModules(url.origin, courseId, archive);
       }
+      if (message.options.assignments) {
+        await filesFromAssignments(url.origin, courseId, archive);
+      }
 
       await fetchAndDownload(archive, courseId);
-      // console.log(archive);
     }
-
   }
 });
 
@@ -61,6 +63,51 @@ function slugify(title) {
     .replace(/ +/g, '-')
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '')
+}
+async function filesFromAssignments(origin, courseId, archive) {
+  const assignments = await getAssignments(origin, courseId);
+  console.log(assignments);
+
+  for (const assignment of assignments) {
+    const doc = parse(assignment.description);
+
+    const anchorElements = doc.querySelectorAll('a');
+
+    const files = [];
+    for (const anchorElement of anchorElements) {
+      if (
+        anchorElement.hasAttribute('data-api-endpoint') &&
+        anchorElement.getAttribute('data-api-returntype') === 'File'
+      ) {
+        files.push({
+          assignmentName: assignment.name,
+          fileUrl: anchorElement.getAttribute('data-api-endpoint'),
+        });
+      }
+    }
+
+    const fileResponses = await Promise.all(
+      files.map((file) => fetch(file.fileUrl))
+    );
+
+    const fileJson = await Promise.all(
+      fileResponses.map((fileResponse) => fileResponse.json())
+    );
+
+    files.forEach((file, i) => {
+      archive.push({
+        fileName:
+          'assignment/' + slugify(file.assignmentName) + '/' + fileJson[i].filename,
+        fileUrl: fileJson[i].url,
+      });
+    });
+  }
+}
+
+async function getAssignments(origin, courseId) {
+  return await (
+    await fetch(origin + '/api/v1/courses/' + courseId + '/assignments?per_page=100')
+  ).json();
 }
 
 async function filesFromFiles(origin, courseId, archive) {
@@ -105,7 +152,6 @@ async function fetchAndDownloadDashboard(archive, courseName, term) {
   });
 }
 
-
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
@@ -121,12 +167,15 @@ async function getFilesFromCourseId(origin, courseId, name, term, options) {
   if (options.modules) {
     await filesFromModules(origin, courseId, archive);
   }
+  if (options.assignments) {
+    await filesFromAssignments(origin, courseId, archive);
+  }
   console.log(archive);
   await fetchAndDownloadDashboard(archive, name, term);
 }
 
 async function getFilesFiles(urlOrigin, courseId) {
-  const filesUrl = urlOrigin + `/api/v1/courses/${courseId}/files`;
+  const filesUrl = urlOrigin + `/api/v1/courses/${courseId}/files?per_page=100`;
   let filesResponse = await fetch(filesUrl);
   if (!filesResponse.ok) {
     return [];
