@@ -1,3 +1,5 @@
+import { parse } from 'node-html-parser';
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.action.disable();
 
@@ -33,11 +35,60 @@ chrome.runtime.onMessage.addListener(async (message) => {
     if (message.options.modules) {
       await filesFromModules(url.origin, courseId, archive);
     }
+    if (message.options.assignments) {
+      await filesFromAssignments(url.origin, courseId, archive);
+    }
 
     await fetchAndDownload(archive, courseId);
     console.log(archive);
   }
 });
+
+async function filesFromAssignments(origin, courseId, archive) {
+  const assignments = await getAssignments(origin, courseId);
+  console.log(assignments);
+
+  for (const assignment of assignments) {
+    const doc = parse(assignment.description);
+
+    const anchorElements = doc.querySelectorAll('a');
+
+    const files = [];
+    for (const anchorElement of anchorElements) {
+      if (
+        anchorElement.hasAttribute('data-api-endpoint') &&
+        anchorElement.getAttribute('data-api-returntype') === 'File'
+      ) {
+        files.push({
+          assignmentName: assignment.name,
+          fileUrl: anchorElement.getAttribute('data-api-endpoint'),
+        });
+      }
+    }
+
+    const fileResponses = await Promise.all(
+      files.map((file) => fetch(file.fileUrl))
+    );
+
+    const fileJson = await Promise.all(
+      fileResponses.map((fileResponse) => fileResponse.json())
+    );
+
+    files.forEach((file, i) => {
+      archive.push({
+        fileName:
+          'assignment/' + file.assignmentName + '/' + fileJson[i].filename,
+        fileUrl: fileJson[i].url,
+      });
+    });
+  }
+}
+
+async function getAssignments(origin, courseId) {
+  return await (
+    await fetch(origin + '/api/v1/courses/' + courseId + '/assignments')
+  ).json();
+}
 
 async function filesFromFiles(origin, courseId, archive) {
   const files = await getFilesFiles(origin, courseId);
