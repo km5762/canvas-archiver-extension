@@ -19,18 +19,26 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener(async (message) => {
-  console.log(message);
+  // console.log(message);
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
-    const coursesIdx = path.indexOf('courses')
-    if (coursesIdx == -1) {
-      // treat it as dashboard
-      dashboard = url.origin + "/api/v1/dashboard/dashboard_cards"
-      
-    } else {
-      const courseId = path[coursesIdx + 1];
+    const coursesIdx = path.indexOf('courses');
+    const courseId = path[coursesIdx + 1];
 
+    if (coursesIdx === -1 && !courseId) {
+      // treat it as dashboard
+      const dashboard = url.origin + "/api/v1/dashboard/dashboard_cards?per_page=100";
+      const dashboardResponse = await fetch(dashboard);
+      const dashboardJson = await dashboardResponse.json();
+
+      dashboardJson.forEach(course => {
+        console.log(`${url.origin}, ${course.id}, ${course.shortName.trim()},${course.term}, ${message.options}`)
+        getFilesFromCourseId(url.origin, course.id, course.shortName.trim(), course.term, message.options);
+      });
+
+
+    } else {
       let archive = [];
 
       if (message.options.files) {
@@ -41,7 +49,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
       }
 
       await fetchAndDownload(archive, courseId);
-      console.log(archive);
+      // console.log(archive);
     }
 
   }
@@ -71,10 +79,10 @@ async function filesFromModules(origin, courseId, archive) {
 }
 
 async function fetchAndDownload(archive, courseId) {
-  console.log(archive);
-  console.log(courseId);
+  // console.log(archive);
+  // console.log(courseId);
   archive.forEach((file) => {
-    console.log(file);
+    // console.log(file);
     chrome.downloads.download({
       url: file.fileUrl,
       filename: `${courseId}/` + file.fileName,
@@ -82,10 +90,34 @@ async function fetchAndDownload(archive, courseId) {
   });
 }
 
+async function fetchAndDownloadDashboard(archive, courseName, term) {
+  archive.forEach((file) => {
+    // console.log(file);
+    chrome.downloads.download({
+      url: file.fileUrl,
+      filename: `${term} / ${courseName}/` + file.fileName,
+    });
+  });
+}
+
+
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
   return tab;
+}
+
+async function getFilesFromCourseId(origin, courseId, name, term, options) {
+  let archive = [];
+
+  if (options.files) {
+    await filesFromFiles(origin, courseId, archive);
+  }
+  if (options.modules) {
+    await filesFromModules(origin, courseId, archive);
+  }
+  console.log(archive);
+  await fetchAndDownloadDashboard(archive, name, term);
 }
 
 async function getFilesFiles(urlOrigin, courseId) {
@@ -107,7 +139,7 @@ function fileObjectHandler(fileObject) {
 
 async function getModules(origin, courseId) {
   const response = await fetch(
-    origin + '/api/v1/courses/' + courseId + '/modules'
+    origin + '/api/v1/courses/' + courseId + '/modules?per_page=100'
   );
 
   return await response.json();
@@ -137,26 +169,3 @@ async function getModuleFiles(items) {
 
   return files;
 }
-
-// if on https://<canvas>/courses/<course_id>/* (course specific download)
-// Download Modules, Files, (Assignments, Announcements, Discussions)
-// Modules:
-// List all modules: https://<canvas>/api/v1/courses/<course_id>/modules (call modules url, returns json)
-// For each module:
-//   let title = module["title"]
-//   let items_url = module["items_url"]
-//   List all module_items (call items_url, returns json)
-//     For each module_item:
-//       if module_item["type"] == "File"
-//         content_id = module_item["content_id"]
-//         let file_object = call https://<canvas>/api/v1/files/<content_id> (returns json)
-//         let file_name = file_object["filename"]
-//         let file_contents_blob = call file_object["url"] (returns binary data)
-
-// Files:
-// List all files: https://canvas.wpi.edu/api/v1/courses/<course_id>/files (call files url, returns json)
-// For each file object:
-//   let name = file["filename"]
-//   let file_contents_blob = call file["url"] (returns binary data)
-//
-// if on https://<canvas> or https://<canvas>/?login_success=1 (download from all courses)
