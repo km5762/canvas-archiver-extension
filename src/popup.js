@@ -1,15 +1,29 @@
 document
   .getElementById('download-button')
   .addEventListener('click', function () {
-    const modules = document.getElementById('modules-checkbox').checked;
-    const files = document.getElementById('files-checkbox').checked;
-    const assignments = document.getElementById('assignments-checkbox').checked;
+    const modules = document
+      .querySelector('.toggle-button.modules')
+      .classList.contains('toggled');
+    const files = document
+      .querySelector('.toggle-button.files')
+      .classList.contains('toggled');
+    const assignments = document
+      .querySelector('.toggle-button.assignments')
+      .classList.contains('toggled');
 
     chrome.runtime.sendMessage({
       action: 'DOWNLOAD_BUTTON_CLICKED',
       options: { modules, files, assignments },
     });
   });
+
+const toggleButtons = document.querySelectorAll('.toggle-button');
+
+for (const toggleButton of toggleButtons) {
+  toggleButton.addEventListener('click', () => {
+    toggleButton.classList.toggle('toggled');
+  });
+}
 
 //  if on course page
 //    download files from

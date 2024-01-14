@@ -69,3 +69,23 @@ h2 {
 #download-button:hover {
   opacity: 90%;
 }
+
+.toggle-button {
+  background-color: #27272a;
+  border: 2px solid #52525b;
+  border-radius: 2rem;
+  font: inherit;
+  padding: 3px 6px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
+.toggle-button:hover {
+  background-color: #3f3f46;
+}
+
+.toggle-button.toggled {
+  background-color: #e80031;
+  border: 2px solid #e80031;
+}
