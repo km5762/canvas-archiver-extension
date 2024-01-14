@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Canvas Archiver Extension",
-  "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "version": "1.0.0",
+  "description": "Archive files in your canvas courses!",
   "background": {
     "service_worker": "background.js"
   },
@@ -12,5 +12,5 @@
     "default_icon": "icons/icon.png"
   },
   "host_permissions": ["https://canvas.wpi.edu/*"],
-  "permissions": ["downloads", "declarativeContent", "tabs", "activeTab", "offscreen"]
+  "permissions": ["downloads", "declarativeContent", "tabs", "activeTab"]
 }
