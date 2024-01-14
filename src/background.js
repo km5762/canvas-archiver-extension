@@ -30,18 +30,27 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
     if (coursesIdx === -1 && !courseId) {
       // treat it as dashboard
-      const dashboard = url.origin + "/api/v1/dashboard/dashboard_cards?per_page=100";
+      const dashboard =
+        url.origin + '/api/v1/dashboard/dashboard_cards?per_page=100';
       const dashboardResponse = await fetch(dashboard);
       const dashboardJson = await dashboardResponse.json();
 
-      dashboardJson.forEach(course => {
-        console.log(`${url.origin}, ${course.id}, ${course.shortName.trim()},${course.term}, ${message.options}`)
-        getFilesFromCourseId(url.origin, course.id, course.shortName.trim(), course.term, message.options);
+      dashboardJson.forEach((course) => {
+        console.log(
+          `${url.origin}, ${course.id}, ${course.shortName.trim()},${
+            course.term
+          }, ${message.options}`
+        );
+        getFilesFromCourseId(
+          url.origin,
+          course.id,
+          course.shortName.trim(),
+          course.term,
+          message.options
+        );
       });
-
-
     } else {
-      let archive = [];
+      const archive = [];
 
       if (message.options.files) {
         await filesFromFiles(url.origin, courseId, archive);
@@ -49,14 +58,12 @@ chrome.runtime.onMessage.addListener(async (message) => {
       if (message.options.modules) {
         await filesFromModules(url.origin, courseId, archive);
       }
+      if (message.options.assignments) {
+        await filesFromAssignments(url.origin, courseId, archive);
+      }
 
       await fetchAndDownload(archive, courseId);
-      // console.log(archive);
     }
-    if (message.options.assignments) {
-      await filesFromAssignments(url.origin, courseId, archive);
-    }
-
   }
 });
 
@@ -150,7 +157,6 @@ async function fetchAndDownloadDashboard(archive, courseName, term) {
     });
   });
 }
-
 
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
