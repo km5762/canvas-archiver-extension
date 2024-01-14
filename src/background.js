@@ -23,19 +23,27 @@ chrome.runtime.onMessage.addListener(async (message) => {
   if (message.action === 'DOWNLOAD_BUTTON_CLICKED') {
     const url = new URL((await getCurrentTab()).url);
     const path = url.pathname.split('/');
-    const courseId = path[path.indexOf('courses') + 1];
+    const coursesIdx = path.indexOf('courses')
+    if (coursesIdx == -1) {
+      // treat it as dashboard
+      dashboard = url.origin + "/api/v1/dashboard/dashboard_cards"
+      
+    } else {
+      const courseId = path[coursesIdx + 1];
 
-    let archive = [];
+      let archive = [];
 
-    if (message.options.files) {
-      await filesFromFiles(url.origin, courseId, archive);
+      if (message.options.files) {
+        await filesFromFiles(url.origin, courseId, archive);
+      }
+      if (message.options.modules) {
+        await filesFromModules(url.origin, courseId, archive);
+      }
+
+      await fetchAndDownload(archive, courseId);
+      console.log(archive);
     }
-    if (message.options.modules) {
-      await filesFromModules(url.origin, courseId, archive);
-    }
 
-    await fetchAndDownload(archive, courseId);
-    console.log(archive);
   }
 });
 
