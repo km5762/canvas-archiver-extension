@@ -36,7 +36,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
       dashboardJson.forEach((course) => {
         console.log(
-          `${url.origin}, ${course.id}, ${course.shortName.trim()}, ${course.term
+          `${url.origin}, ${course.id}, ${course.shortName.trim()}, ${
+            course.term
           }, ${message.options}`
         );
         getFilesFromCourseId(
@@ -92,7 +93,7 @@ async function filesFromPages(origin, courseId, archive) {
     )
   );
 
-  bodies = await Promise.all(bodies.map(body => body.json()))
+  bodies = await Promise.all(bodies.map((body) => body.json()));
 
   for (const body of bodies) {
     const doc = parse(body['body']);
@@ -128,10 +129,13 @@ async function filesFromPages(origin, courseId, archive) {
       });
     });
   }
+  console.log(archive);
 }
 
 async function getPages(origin, courseId) {
-  return await fetch(origin + '/api/v1/courses/' + courseId + '/pages?per_page=100')
+  return await fetch(
+    origin + '/api/v1/courses/' + courseId + '/pages?per_page=100'
+  );
 }
 
 async function filesFromAssignments(origin, courseId, archive) {
@@ -210,10 +214,12 @@ async function filesFromModules(origin, courseId, archive) {
 
 async function fetchAndDownload(archive, courseId) {
   archive.forEach((file) => {
-    chrome.downloads.download({
-      url: file.fileUrl,
-      filename: `${courseId}/${file.fileName}`,
-    });
+    if (file.fileName && file.fileUrl) {
+      chrome.downloads.download({
+        url: file.fileUrl,
+        filename: `${courseId}/${file.fileName}`,
+      });
+    }
   });
 }
 
@@ -246,7 +252,7 @@ async function getFilesFromCourseId(origin, courseId, name, term, options) {
     await filesFromAssignments(origin, courseId, archive);
   }
   if (options.pages) {
-    console.log("IN PAGES");
+    console.log('IN PAGES');
     await filesFromPages(origin, courseId, archive);
   }
   console.log(archive);
