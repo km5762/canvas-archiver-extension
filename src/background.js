@@ -35,9 +35,19 @@ chrome.runtime.onMessage.addListener(async (message) => {
       const dashboardResponse = await fetch(dashboard);
       const dashboardJson = await dashboardResponse.json();
 
-      dashboardJson.forEach(course => {
-        console.log(`${url.origin}, ${course.id}, ${course.shortName.trim()}, ${course.term}, ${message.options}`)
-        getFilesFromCourseId(url.origin, course.id, course.shortName.trim(), course.term, message.options);
+      dashboardJson.forEach((course) => {
+        console.log(
+          `${url.origin}, ${course.id}, ${course.shortName.trim()}, ${
+            course.term
+          }, ${message.options}`
+        );
+        getFilesFromCourseId(
+          url.origin,
+          course.id,
+          course.shortName.trim(),
+          course.term,
+          message.options
+        );
       });
     } else {
       const archive = [];
@@ -51,6 +61,9 @@ chrome.runtime.onMessage.addListener(async (message) => {
       if (message.options.assignments) {
         await filesFromAssignments(url.origin, courseId, archive);
       }
+      if (message.options.pages) {
+        await filesFromPages(url.origin, courseId, archive);
+      }
 
       await fetchAndDownload(archive, courseId);
     }
@@ -62,8 +75,62 @@ function slugify(title) {
     .trim()
     .replace(/ +/g, '-')
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '')
+    .replace(/[^a-z0-9-]/g, '');
 }
+
+async function filesFromPages(origin, courseId, archive) {
+  const pages = await getPages(origin, courseId);
+
+  const bodies = await Promise.all(
+    pages.map((page) =>
+      fetch(
+        origin + '/api/v1/courses/' + courseId + '/pages/' + page['page_id']
+      )
+    )
+  );
+
+  for (const body of bodies) {
+    const doc = parse(body.description);
+
+    const anchorElements = doc.querySelectorAll('a');
+
+    const files = [];
+    for (const anchorElement of anchorElements) {
+      if (
+        anchorElement.hasAttribute('data-api-endpoint') &&
+        anchorElement.getAttribute('data-api-returntype') === 'File'
+      ) {
+        files.push({
+          pageName: page.title,
+          fileUrl: anchorElement.getAttribute('data-api-endpoint'),
+        });
+      }
+    }
+
+    const fileResponses = await Promise.all(
+      files.map((file) => fetch(file.fileUrl))
+    );
+
+    const fileJson = await Promise.all(
+      fileResponses.map((fileResponse) => fileResponse.json())
+    );
+
+    files.forEach((file, i) => {
+      archive.push({
+        fileName:
+          'pages/' + slugify(file.pageName) + '/' + fileJson[i].filename,
+        fileUrl: fileJson[i].url,
+      });
+    });
+  }
+}
+
+async function getPages(origin, courseId) {
+  return await (
+    await fetch(origin + '/api/v1/courses/' + courseId + '/pages?per_page=100')
+  ).json();
+}
+
 async function filesFromAssignments(origin, courseId, archive) {
   const assignments = await getAssignments(origin, courseId);
   console.log(assignments);
@@ -97,7 +164,10 @@ async function filesFromAssignments(origin, courseId, archive) {
     files.forEach((file, i) => {
       archive.push({
         fileName:
-          'assignment/' + slugify(file.assignmentName) + '/' + fileJson[i].filename,
+          'assignment/' +
+          slugify(file.assignmentName) +
+          '/' +
+          fileJson[i].filename,
         fileUrl: fileJson[i].url,
       });
     });
@@ -106,7 +176,9 @@ async function filesFromAssignments(origin, courseId, archive) {
 
 async function getAssignments(origin, courseId) {
   return await (
-    await fetch(origin + '/api/v1/courses/' + courseId + '/assignments?per_page=100')
+    await fetch(
+      origin + '/api/v1/courses/' + courseId + '/assignments?per_page=100'
+    )
   ).json();
 }
 
@@ -137,17 +209,17 @@ async function fetchAndDownload(archive, courseId) {
   archive.forEach((file) => {
     chrome.downloads.download({
       url: file.fileUrl,
-      filename: `${slugify(courseId)}/${slugify(file.filename)}`
+      filename: `${slugify(courseId)}/${slugify(file.filename)}`,
     });
   });
 }
 
 async function fetchAndDownloadDashboard(archive, courseName, term) {
   archive.forEach((file) => {
-    console.log(`${slugify(term)}/${slugify(courseName)}/${file.fileName}`)
+    console.log(`${slugify(term)}/${slugify(courseName)}/${file.fileName}`);
     chrome.downloads.download({
       url: file.fileUrl,
-      filename: `${slugify(term)}/${slugify(courseName)}/${file.fileName}`
+      filename: `${slugify(term)}/${slugify(courseName)}/${file.fileName}`,
     });
   });
 }
@@ -169,6 +241,9 @@ async function getFilesFromCourseId(origin, courseId, name, term, options) {
   }
   if (options.assignments) {
     await filesFromAssignments(origin, courseId, archive);
+  }
+  if (message.options.pages) {
+    await filesFromPages(origin, courseId, archive);
   }
   console.log(archive);
   await fetchAndDownloadDashboard(archive, name, term);

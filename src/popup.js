@@ -10,10 +10,13 @@ document
     const assignments = document
       .querySelector('.toggle-button.assignments')
       .classList.contains('toggled');
+    const pages = document
+      .querySelector('.toggle-button.pages')
+      .classList.contains('toggled');
 
     chrome.runtime.sendMessage({
       action: 'DOWNLOAD_BUTTON_CLICKED',
-      options: { modules, files, assignments },
+      options: { modules, files, assignments, pages },
     });
   });
 
