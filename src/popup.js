@@ -1,3 +1,11 @@
+const toggleButtons = document.querySelectorAll('.toggle-button');
+
+for (const toggleButton of toggleButtons) {
+  toggleButton.addEventListener('click', () => {
+    toggleButton.classList.toggle('toggled');
+  });
+}
+
 document
   .getElementById('download-button')
   .addEventListener('click', function () {
@@ -19,14 +27,6 @@ document
       options: { modules, files, assignments, pages },
     });
   });
-
-const toggleButtons = document.querySelectorAll('.toggle-button');
-
-for (const toggleButton of toggleButtons) {
-  toggleButton.addEventListener('click', () => {
-    toggleButton.classList.toggle('toggled');
-  });
-}
 
 //  if on course page
 //    download files from
