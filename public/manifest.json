@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Canvas Archiver Extension",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Archive files in your canvas courses!",
   "background": {
     "service_worker": "background.js"
@@ -12,8 +12,8 @@
     "default_icon": "icons/icon.png"
   },
   "host_permissions": [
-    "*://canvas.*/*",
-    "*://*.instructure.com/*"
+    "https://*.instructure.com/*",
+    "https://canvas.*.edu/*"
   ],
   "permissions": ["downloads", "declarativeContent", "tabs", "activeTab"]
 }
