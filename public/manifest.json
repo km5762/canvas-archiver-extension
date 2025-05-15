@@ -11,6 +11,9 @@
     "default_popup": "popup.html",
     "default_icon": "icons/icon.png"
   },
-  "host_permissions": ["https://canvas.wpi.edu/*"],
+  "host_permissions": [
+    "*://canvas.*/*",
+    "*://*.instructure.com/*"
+  ],
   "permissions": ["downloads", "declarativeContent", "tabs", "activeTab"]
 }
