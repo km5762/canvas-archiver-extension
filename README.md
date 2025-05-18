@@ -20,6 +20,13 @@ Extension for downloading files from Canvas course pages
 5. Click this button and find the extracted folder for the extension from step 2
 6. Your extension should now be ready to use!
 
+## Notes
+
+For a more seamless expierence, turn off the "Ask where to save each file before downloading" setting. This can be toggled in Chromium-based browsers by navigating to Settings > Downloads.
+
+![image](https://github.com/user-attachments/assets/923d86a2-4d83-4e5b-8d27-0d5009897f23)
+
+
 ## Contribution
 
 Contributers:
