@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Canvas Archiver Extension",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Archive files in your canvas courses!",
   "background": {
     "service_worker": "background.js"
@@ -23,7 +23,6 @@
   "permissions": [
     "downloads",
     "declarativeContent",
-    "tabs",
-    "activeTab"
+    "tabs"
   ]
 }

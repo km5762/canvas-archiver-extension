@@ -1,7 +1,7 @@
 {
   "name": "canvas-archiver-extension",
-  "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "version": "1.0.4",
+  "description": "Archive files in your canvas courses!",
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.config.js",
